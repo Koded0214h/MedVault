@@ -4,3 +4,6 @@ from django.apps import AppConfig
 class EhrConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'ehr'
+    
+    def ready(self):
+        import ehr.signals
