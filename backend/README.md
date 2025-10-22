@@ -3,6 +3,7 @@
 ## Project Overview
 **MedVault: The Last-Mile Resource Agent**  
 *Unified Health Records. Real-Time Resource Access. Health Equity Delivered.*
+*Base URL: https://medvault-backend-lq7h.onrender.com/*
 
 A secure, patient-centric digital platform with AI-driven resource layer addressing healthcare supply chain failures across African healthcare systems.
 
