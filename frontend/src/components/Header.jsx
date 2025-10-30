@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FaHeartbeat, FaExclamationTriangle, FaMapMarkerAlt, FaBars, FaTimes } from 'react-icons/fa';
+import { FaHeartbeat, FaExclamationTriangle, FaMapMarkerAlt, FaBars, FaTimes, FaUser } from 'react-icons/fa';
+import { RiRobot2Line } from "react-icons/ri";
+
 import { useState } from 'react';
 
 const Header = () => {
@@ -9,8 +11,10 @@ const Header = () => {
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: FaHeartbeat },
+    { name: 'Patient Dashboard', href: '/patient-dashboard', icon: FaUser },
     { name: 'Emergency Alerts', href: '/emergency-alerts', icon: FaExclamationTriangle },
     { name: 'Medical Resources', href: '/medical-resources', icon: FaMapMarkerAlt },
+    { name: 'AI Insights', href: '/ai-insights', icon: RiRobot2Line },
   ];
 
   const isActive = (href) => {

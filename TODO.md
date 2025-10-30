@@ -45,7 +45,14 @@ Tweak frontend files to build the agent-driven resource layer concept with MCP i
 - [x] Implement AI assistant help feature
 - [x] Update App.jsx routing for authentication flow
 
-### 7. Followup Steps
+### 7. Create Patient Dashboard
+- [ ] Create PatientDashboard.jsx component with sections for health summary, appointments, prescriptions, alerts, AI insights, and Patient Demand Data (aggregate, anonymized medication/treatment history from EHRs)
+- [ ] Create PatientDashboardPage.jsx page wrapper
+- [ ] Update App.jsx to add routing for /patient-dashboard
+- [ ] Update Header.jsx to add navigation link for Patient Dashboard
+- [ ] Test patient dashboard for responsiveness and functionality
+
+### 8. Followup Steps
 - [ ] Test frontend components for responsiveness
 - [ ] Integrate with backend APIs for real data
 - [ ] Add map library (Leaflet) for actual map functionality

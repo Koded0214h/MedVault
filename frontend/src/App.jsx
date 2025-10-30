@@ -2,11 +2,13 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import MedicalResourcesPage from './pages/MedicalResourcesPage';
 import DashboardPage from './pages/DashboardPage';
+import PatientDashboardPage from './pages/PatientDashboardPage';
 import EmergencyAlertsPage from './pages/EmergencyAlertsPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import OTPVerificationPage from './pages/OTPVerificationPage';
 import StoreBrowserPage from './pages/StoreBrowserPage';
+import AIInsightsPage from './pages/AIInsightsPage';
 
 function App() {
   return (
@@ -19,8 +21,10 @@ function App() {
           <Route path="/verify-otp" element={<OTPVerificationPage />} />
           <Route path="/medical-resources" element={<MedicalResourcesPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/patient-dashboard" element={<PatientDashboardPage />} />
           <Route path="/emergency-alerts" element={<EmergencyAlertsPage />} />
           <Route path="/store" element={<StoreBrowserPage />} />
+          <Route path="/ai-insights" element={<AIInsightsPage />} />
         </Routes>
       </div>
     </Router>
