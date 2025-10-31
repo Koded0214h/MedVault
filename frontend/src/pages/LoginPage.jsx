@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FaUserMd, FaShieldAlt, FaEye, FaEyeSlash, FaRobot } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -8,11 +9,20 @@ const LoginPage = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     // Handle login logic here
-    console.log('Login attempt:', { email, password, rememberMe });
+    try {
+      const response = await api.post('/auth/login/', { username: email, password });
+      localStorage.setItem('access-token', response.data.access);
+      localStorage.setItem('refresh-token', response.data.refresh);
+      navigate('/dashboard');
+    } catch (error) {
+      setError('Invalid credentials. Please try again.');
+    }
   };
 
   return (
@@ -98,6 +108,12 @@ const LoginPage = () => {
               Log In
             </button>
           </form>
+
+          {error && (
+            <div className = "mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded mt-4">
+              {error}
+            </div>
+          )}
 
           {/* Divider */}
           <div className="mt-8 mb-6">

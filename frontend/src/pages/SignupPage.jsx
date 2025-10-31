@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FaUserMd, FaClinicMedical, FaShieldAlt, FaEye, FaEyeSlash, FaCheck, FaRobot } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 const SignupPage = () => {
   const [userType, setUserType] = useState('patient');
@@ -18,6 +19,7 @@ const SignupPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [error, setError] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -27,11 +29,31 @@ const SignupPage = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     // Handle signup logic here
-    console.log('Signup attempt:', { userType, ...formData });
+    const userData = {
+      username: formData.email, // Use email as username
+      email: formData.email,
+      password: formData.password,
+      password2: formData.confirmPassword,
+      user_type: userType,
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      phone_number: formData.phone
+    };
+    try {
+      const response = await api.post('/auth/register/', userData);
+      localStorage.setItem('access-token', response.data.access);
+      localStorage.setItem('refresh-token', response.data.refresh);
+      navigate('/dashboard');
+    } catch (error) {
+      setError('Registration failed. Please try again');
+    }
   };
+
 
   const passwordStrength = (password) => {
     if (password.length === 0) return '';

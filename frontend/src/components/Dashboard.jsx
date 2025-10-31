@@ -1,7 +1,48 @@
-import React from 'react';
+import React, {useState, useEffect } from 'react';
 import { FaExclamationTriangle, FaBox, FaClipboardList, FaPlus, FaCheckCircle, FaBrain, FaChartLine, FaTruck, FaBell } from 'react-icons/fa';
+import api from '../services/api';
 
 const Dashboard = () => {
+  const [inventoryData, setInventoryData] = useState([]);
+  const [inventorySummary, setInventorySummary] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [alerts, setAlerts] = useState([]);
+  const [predictions, setPredictions] = useState([]);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const inventoryResponse = await api.get('/inventory/items/');
+        const inventoryData = inventoryResponse.data;
+
+        const summary = {
+          totalItems: inventoryData.length,
+          lowStock: inventoryData.filter(item => item.quantity < item.min_threshold).length,
+          totalValue: inventoryData.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0)
+        };
+
+        setInventoryData(inventoryData);
+        setInventorySummary(summary);
+
+        const predictionsResponse = await api.get('/mcp/predictions/');
+        setPredictions(predictionsResponse.data.slice(0, 5));
+
+        const alertsResponse = await api.get('/notifications/alerts/');
+        setAlerts(alertsResponse.data.slice(0, 3));
+
+      } catch (error) {
+         console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return <div className="text-center py-8">Loading...</div>;
+  }
+  
   return (
     <div className="max-w-6xl mx-auto p-6">
       {/* Header */}
@@ -27,7 +68,7 @@ const Dashboard = () => {
       <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
         <div className="flex items-center">
           <FaExclamationTriangle className="text-red-500 mr-3" />
-          <span className="text-red-700 font-semibold">8 Items Below Threshold</span>
+          <span className="text-red-700 font-semibold">{inventorySummary.lowStock || 0} Items Below Threshold</span>
         </div>
       </div>
 
@@ -117,7 +158,7 @@ const Dashboard = () => {
               <FaBox className="text-blue-500 text-2xl mr-2" />
               <h3 className="text-lg font-semibold text-gray-700">Total Inventory Items</h3>
             </div>
-            <div className="text-4xl font-bold text-gray-800">450</div>
+            <div className="text-4xl font-bold text-gray-800">{inventorySummary.totalItems || 0}</div>
           </div>
 
           {/* Automated Order Recommendations */}

@@ -2,6 +2,8 @@ import React from 'react';
 import { FaUserMd, FaCalendarAlt, FaPrescriptionBottle, FaBell, FaBrain, FaChartBar, FaHeartbeat, FaStethoscope } from 'react-icons/fa';
 
 const PatientDashboard = () => {
+
+  
   return (
     <div className="max-w-6xl mx-auto p-6">
       {/* Header */}

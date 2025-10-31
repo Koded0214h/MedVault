@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaSearch, FaMapMarkerAlt, FaHospital, FaFlask, FaMedkit, FaArrowRight, FaCheck, FaTimes, FaMap, FaClock, FaPhone } from 'react-icons/fa';
+import api from '../services/api';
 
 const MedicalResources = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedResource, setSelectedResource] = useState('all');
+  const [inventory, setInventory] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const quickSearches = [
     { label: 'Insulin', icon: FaMedkit, color: 'bg-blue-100 text-blue-800' },
@@ -11,6 +14,42 @@ const MedicalResources = () => {
     { label: 'Malaria Test', icon: FaFlask, color: 'bg-green-100 text-green-800' },
     { label: 'Antibiotics', icon: FaMedkit, color: 'bg-purple-100 text-purple-800' }
   ];
+
+  useEffect(() => {
+    const fetchInventory = async () => {
+      try {
+        const response = await api.get('/inventory/items/');
+        setInventory(response.data);
+      } catch (error) {
+        console.error('Error fetching inventory:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInventory();
+  }, []);
+
+  const filteredInventory = inventory.filter(item =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleReserve = async (itemId) => {
+    try {
+      await api.post(`/inventory/items/${itemId}/reserve/`, {
+        quantity: 1,
+        user_id: localStorage.getItem('user_id')
+      });
+      // Refresh inventory data
+      const response = await api.get('/inventory/items/');
+      setInventory(response.data);
+    } catch (error) {
+      console.error('Error reserving item:', error);
+    }
+  };
+
+  if (loading) return <div className="text-center py-8">Loading inventory...</div>;
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -147,124 +186,70 @@ const MedicalResources = () => {
           </div>
 
           {/* Search Result Info */}
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-            <p className="text-green-700 font-medium">
-              ✅ Nearest available {searchQuery || 'O- Blood'} found 2.1km away at City Central Pharmacy.
-            </p>
-            <p className="text-green-600 text-sm mt-1">
-              Last updated: 2 minutes ago • Real-time tracking active
-            </p>
-          </div>
+          {filteredInventory.length > 0 && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <p className="text-green-700 font-medium">
+                ✅ Found {filteredInventory.length} item{filteredInventory.length > 1 ? 's' : ''} matching "{searchQuery || 'all'}"
+              </p>
+              <p className="text-green-600 text-sm mt-1">
+                Last updated: Just now • Real-time tracking active
+              </p>
+            </div>
+          )}
 
           {/* Search Results */}
           <div className="space-y-4">
-            {/* City Central Pharmacy */}
-            <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h3 className="font-bold text-lg text-gray-800 flex items-center">
-                    <FaMedkit className="text-blue-500 mr-2" />
-                    City Central Pharmacy
-                  </h3>
-                  <p className="text-gray-600 text-sm">123 Health St. • 1.5km away • Open until 8PM</p>
-                  <div className="flex items-center mt-1">
-                    <FaPhone className="text-gray-400 mr-1 text-xs" />
-                    <span className="text-gray-500 text-xs">+1 (555) 123-4567</span>
+            {filteredInventory.length > 0 ? (
+              filteredInventory.map((item) => (
+                <div key={item.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-800 flex items-center">
+                        <FaMedkit className="text-blue-500 mr-2" />
+                        {item.name}
+                      </h3>
+                      <p className="text-gray-600 text-sm">{item.category} • Available at multiple locations</p>
+                      <div className="flex items-center mt-1">
+                        <span className="text-gray-500 text-xs">Unit Price: ${item.unit_price}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`flex items-center text-sm mb-1 ${
+                        item.quantity > item.min_threshold ? 'text-green-600' :
+                        item.quantity > 0 ? 'text-yellow-600' : 'text-red-600'
+                      }`}>
+                        {item.quantity > item.min_threshold ? <FaCheck className="mr-1" /> :
+                         item.quantity > 0 ? <FaClock className="mr-1" /> : <FaTimes className="mr-1" />}
+                        {item.quantity > item.min_threshold ? `In Stock (${item.quantity} units)` :
+                         item.quantity > 0 ? `Limited (${item.quantity} units)` : 'Out of Stock'}
+                      </div>
+                      <div className="text-xs text-gray-500">Updated recently</div>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                      <FaMapMarkerAlt className="mr-2" />
+                      Find Locations
+                    </button>
+                    {item.quantity > 0 && (
+                      <button
+                        onClick={() => handleReserve(item.id)}
+                        className="flex items-center border border-blue-600 text-blue-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors"
+                      >
+                        Reserve Now
+                      </button>
+                    )}
+                    <button className="flex items-center border border-gray-300 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+                      Details
+                    </button>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="flex items-center text-green-600 text-sm mb-1">
-                    <FaCheck className="mr-1" />
-                    In Stock (12 units)
-                  </div>
-                  <div className="text-xs text-gray-500">Updated 5 min ago</div>
-                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                No items found matching your search.
               </div>
-              <div className="flex space-x-2">
-                <button className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-                  <FaMapMarkerAlt className="mr-2" />
-                  Navigate
-                </button>
-                <button className="flex items-center border border-blue-600 text-blue-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors">
-                  Reserve Now
-                </button>
-                <button className="flex items-center border border-gray-300 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
-                  Call
-                </button>
-              </div>
-            </div>
-
-            {/* Oak Valley Hospital */}
-            <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h3 className="font-bold text-lg text-gray-800 flex items-center">
-                    <FaHospital className="text-red-500 mr-2" />
-                    Oak Valley Hospital
-                  </h3>
-                  <p className="text-gray-600 text-sm">456 Wellness Ave. • 2.8km away • Emergency Dept Open 24/7</p>
-                  <div className="flex items-center mt-1">
-                    <FaPhone className="text-gray-400 mr-1 text-xs" />
-                    <span className="text-gray-500 text-xs">+1 (555) 987-6543</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="flex items-center text-yellow-600 text-sm mb-1">
-                    <FaClock className="mr-1" />
-                    Limited Stock (3 units)
-                  </div>
-                  <div className="text-xs text-gray-500">Updated 12 min ago</div>
-                </div>
-              </div>
-              <div className="flex space-x-2">
-                <button className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-                  <FaMapMarkerAlt className="mr-2" />
-                  Navigate
-                </button>
-                <button className="flex items-center border border-blue-600 text-blue-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors">
-                  Details
-                </button>
-                <button className="flex items-center border border-gray-300 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
-                  Call
-                </button>
-              </div>
-            </div>
-
-            {/* Downtown Diagnostics Lab */}
-            <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h3 className="font-bold text-lg text-gray-800 flex items-center">
-                    <FaFlask className="text-green-500 mr-2" />
-                    Downtown Diagnostics Lab
-                  </h3>
-                  <p className="text-gray-600 text-sm">789 Cure Blvd. • 4.1km away • Open until 6PM</p>
-                  <div className="flex items-center mt-1">
-                    <FaPhone className="text-gray-400 mr-1 text-xs" />
-                    <span className="text-gray-500 text-xs">+1 (555) 456-7890</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="flex items-center text-red-600 text-sm mb-1">
-                    <FaTimes className="mr-1" />
-                    Out of Stock
-                  </div>
-                  <div className="text-xs text-gray-500">Updated 1 hour ago</div>
-                </div>
-              </div>
-              <div className="flex space-x-2">
-                <button className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-                  <FaMapMarkerAlt className="mr-2" />
-                  Navigate
-                </button>
-                <button className="flex items-center border border-gray-300 text-gray-400 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed">
-                  Unavailable
-                </button>
-                <button className="flex items-center border border-gray-300 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
-                  Call
-                </button>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* MCP Insights */}
