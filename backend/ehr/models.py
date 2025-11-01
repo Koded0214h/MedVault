@@ -64,6 +64,36 @@ class LabResult(models.Model):
     lab_name = models.CharField(max_length=255)
     date_tested = models.DateTimeField()
     date_received = models.DateTimeField(auto_now_add=True)
-    
+
     def __str__(self):
         return f"{self.test_name} - {self.medical_record.patient}"
+
+class Diagnosis(models.Model):
+    DIAGNOSIS_TYPE_CHOICES = (
+        ('primary', 'Primary'),
+        ('secondary', 'Secondary'),
+        ('differential', 'Differential'),
+        ('confirmed', 'Confirmed'),
+        ('suspected', 'Suspected'),
+    )
+
+    medical_record = models.ForeignKey(MedicalRecord, on_delete=models.CASCADE, related_name='diagnoses')
+    diagnosis_name = models.CharField(max_length=255)
+    diagnosis_code = models.CharField(max_length=20, blank=True, null=True)  # ICD-10 code
+    diagnosis_type = models.CharField(max_length=20, choices=DIAGNOSIS_TYPE_CHOICES, default='primary')
+    description = models.TextField(blank=True, null=True)
+    severity_level = models.CharField(max_length=20, choices=(
+        ('mild', 'Mild'),
+        ('moderate', 'Moderate'),
+        ('severe', 'Severe'),
+        ('critical', 'Critical'),
+    ), blank=True, null=True)
+
+    diagnosed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='diagnoses_made')
+    diagnosed_date = models.DateTimeField(auto_now_add=True)
+
+    is_active = models.BooleanField(default=True)
+    resolved_date = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.diagnosis_name} - {self.medical_record.patient}"

@@ -4,7 +4,14 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from datetime import timedelta
 from .models import Patient, Prescription
-from mcp.models import DemandData
+
+# Import MCP models conditionally to avoid import errors when MCP app is not available
+try:
+    from mcp.models import DemandData
+    MCP_AVAILABLE = True
+except ImportError:
+    MCP_AVAILABLE = False
+    DemandData = None
 
 User = get_user_model()
 
@@ -21,7 +28,7 @@ def create_demand_data_from_prescription(sender, instance, created, **kwargs):
     """
     Automatically create demand data when a prescription is created
     """
-    if created:
+    if created and MCP_AVAILABLE and DemandData:
         try:
             # Extract medical item name from prescription
             medication_name = instance.medication_name

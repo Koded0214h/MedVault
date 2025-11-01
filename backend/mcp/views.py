@@ -21,10 +21,10 @@ class MCPConfigListView(generics.ListCreateAPIView):
     queryset = MCPConfig.objects.all()
     serializer_class = MCPConfigSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get_permissions(self):
         if self.request.method == 'POST':
-            return [permissions.IsAuthenticated(), permissions.IsAdminUser()]
+            return [permissions.IsAuthenticated()]  # Allow authenticated users to create configs
         return [permissions.IsAuthenticated()]
 
 class MCPConfigDetailView(generics.RetrieveUpdateDestroyAPIView):

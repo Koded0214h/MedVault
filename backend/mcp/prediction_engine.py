@@ -7,6 +7,7 @@ from django.db.models import Sum, Avg, Count, Q
 from django.db import transaction
 from .models import MCPConfig, DemandData, ContextData, ShortagePrediction, PredictionAlert
 from inventory.models import MedicalItem, Inventory
+from .external_apis import ExternalDataManager
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,9 @@ class MCPPredictionEngine:
                 name=config_name,
                 description="Default MCP Configuration"
             )
+
+        # Initialize external data manager for live API calls
+        self.external_data = ExternalDataManager()
     
     def calculate_demand_trend(self, medical_item, region, days_back=30):
         """
@@ -64,26 +68,33 @@ class MCPPredictionEngine:
     
     def get_context_factors(self, region, days_ahead=14):
         """
-        Get contextual factors affecting demand
+        Get contextual factors affecting demand (with live API updates)
         """
+        # First, try to update live data
+        try:
+            self.external_data.update_weather_data(region)
+            self.external_data.update_disease_data(region)
+        except Exception as e:
+            logger.warning(f"Could not update live external data for {region}: {str(e)}")
+
         end_date = timezone.now() + timedelta(days=days_ahead)
-        
+
         context_factors = ContextData.objects.filter(
             region=region,
             effective_date__lte=end_date,
             expiry_date__gte=timezone.now()
         )
-        
+
         impact_score = 1.0  # Base impact
-        
+
         for context in context_factors:
             if context.data_type == 'disease_trend' and context.trend_direction == 'up':
                 impact_score *= 1.3  # 30% increase in demand
             elif context.data_type == 'public_health_alert' and context.alert_level == 'high':
                 impact_score *= 1.5  # 50% increase in demand
-            elif context.data_type == 'weather' and context.rainfall > 50:  # Heavy rainfall
+            elif context.data_type == 'weather' and context.rainfall and context.rainfall > 50:  # Heavy rainfall
                 impact_score *= 1.2  # 20% increase in demand
-        
+
         return impact_score
     
     def predict_shortage(self, medical_item, region, prediction_days=14):

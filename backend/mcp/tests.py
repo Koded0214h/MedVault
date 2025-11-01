@@ -104,13 +104,13 @@ class MCPPredictionEngineTestCase(TestCase):
                 season='dry' if i < 15 else 'rainy'
             )
 
-        # Create context data
+        # Create context data with heavy rainfall to trigger impact
         ContextData.objects.create(
             region='Lagos',
             data_type='weather',
             temperature=28.5,
             humidity=75.0,
-            rainfall=15.0,
+            rainfall=60.0,  # Heavy rainfall > 50mm to trigger 1.2x impact
             effective_date=timezone.now(),
             expiry_date=timezone.now() + timedelta(days=7),
             confidence_score=0.9,

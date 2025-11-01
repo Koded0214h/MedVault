@@ -1,0 +1,17 @@
+{
+  "name": "medvault-mcp",
+  "version": "1.0.0",
+  "description": "MedVault MCP Server for healthcare resource prediction",
+  "command": "python",
+  "args": ["mcp_server_fixed.py"],
+  "env": {
+    "DJANGO_SETTINGS_MODULE": "backend.settings",
+    "PYTHONPATH": "/Users/koded/Desktop/Code/MedVault/backend"
+  },
+  "capabilities": {
+    "tools": {
+      "listChanged": false
+    }
+  },
+  "timeout": 300
+}

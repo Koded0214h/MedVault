@@ -169,3 +169,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOW_ALL_ORIGINS=True
 
 AUTH_USER_MODEL = 'users.User'
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# External API Keys for Live Data Integration
+OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY', None)  # Get from https://openweathermap.org/api
+GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY', None)  # Get from Google Cloud Console
